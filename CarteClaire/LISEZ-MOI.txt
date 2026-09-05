@@ -1,9 +1,10 @@
 CARTE CLAIRE — MODE D’EMPLOI
 
-La VERSION 4.6 adopte une fenêtre plus compacte, une animation de copie beaucoup
-plus énergique, des sons de réussite et d’erreur, et une interface volontairement
-simple. Faites glisser le fond de la fenêtre pour déplacer l’application. Les
-boutons placés en haut à droite permettent de couper le son ou de quitter.
+La VERSION 4.7 garde une animation de copie très énergique, mais réserve le centre
+aux informations importantes : les particules explosent autour du texte sans le
+masquer. Elle ajoute aussi des sons de réussite et d’erreur. Faites glisser le fond
+de la fenêtre pour déplacer l’application. Les boutons placés en haut à droite
+permettent de couper le son ou de quitter.
 
 1. Ouvrez « Carte Claire » et laissez l’application ouverte.
 2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.

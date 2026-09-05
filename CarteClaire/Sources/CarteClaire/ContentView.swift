@@ -45,7 +45,7 @@ struct ContentView: View {
                     actionArea
                 }
                 .frame(width: 510)
-                .offset(y: 19)
+                .offset(y: 33)
             }
 
             topControls
@@ -199,6 +199,7 @@ struct ContentView: View {
                 .frame(width: 650, height: 290)
                 .rotationEffect(.degrees(trailsAreMoving ? -8 : -18))
                 .offset(x: trailsAreMoving ? 28 : -18, y: trailsAreMoving ? 72 : 34)
+                .opacity(controller.phase == .working ? 0 : 1)
 
             Ellipse()
                 .trim(from: 0.44, to: 0.96)
@@ -209,6 +210,7 @@ struct ContentView: View {
                 .frame(width: 620, height: 270)
                 .rotationEffect(.degrees(trailsAreMoving ? 190 : 202))
                 .offset(x: trailsAreMoving ? -24 : 22, y: trailsAreMoving ? -62 : -24)
+                .opacity(controller.phase == .working ? 0 : 1)
 
             ForEach(0..<14) { index in
                 Image(systemName: index % 4 == 0 ? "sparkle" : "circle.fill")
@@ -288,9 +290,14 @@ struct ContentView: View {
     private var centralStatus: some View {
         ZStack {
             Circle()
-                .fill(Color.white.opacity(0.09))
+                .fill(
+                    controller.phase == .working
+                        ? Color(red: 0.055, green: 0.065, blue: 0.16).opacity(0.97)
+                        : Color.white.opacity(0.09)
+                )
                 .overlay(Circle().stroke(Color.white.opacity(0.14), lineWidth: 1))
                 .frame(width: 244, height: 244)
+                .shadow(color: .black.opacity(controller.phase == .working ? 0.62 : 0), radius: 22)
 
             Circle()
                 .trim(from: 0, to: ringProgress)
@@ -533,71 +540,39 @@ private struct OrbitLinkButtonStyle: ButtonStyle {
 private struct WorkingEnergyField: View {
     private let colors: [Color] = [.pink, .purple, electricCyan, .orange, .yellow]
     @State private var particlesAreFlying = false
-    @State private var ringsAreExpanding = false
-    @State private var vortexIsTurning = false
 
     var body: some View {
         GeometryReader { geometry in
             let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2 + 22)
 
             ZStack {
-                ForEach(0..<4) { index in
-                    Circle()
-                        .stroke(colors[index].opacity(ringsAreExpanding ? 0.02 : 0.42), lineWidth: CGFloat(2 + index))
-                        .frame(width: CGFloat(130 + index * 34), height: CGFloat(130 + index * 34))
-                        .scaleEffect(ringsAreExpanding ? 2.15 : 0.62)
-                        .position(center)
-                        .animation(
-                            .easeOut(duration: 1.35 + Double(index) * 0.16)
-                                .repeatForever(autoreverses: false)
-                                .delay(Double(index) * 0.20),
-                            value: ringsAreExpanding
-                        )
-                }
-
-                ForEach(0..<56) { index in
+                ForEach(0..<68) { index in
                     let angle = Double(index) * 137.5 * .pi / 180
-                    let distance = CGFloat(105 + (index * 29) % 255)
-                    let startDistance = CGFloat(25 + (index * 7) % 42)
-                    let size = CGFloat(3 + index % 6)
+                    let distance = CGFloat(255 + (index * 31) % 165)
+                    let startDistance = CGFloat(148 + (index * 7) % 30)
+                    let size = CGFloat(3 + index % 5)
 
                     Capsule()
                         .fill(colors[index % colors.count])
-                        .frame(width: index % 4 == 0 ? size * 3.2 : size, height: size)
-                        .shadow(color: colors[index % colors.count].opacity(0.8), radius: 5)
+                        .frame(width: index % 5 == 0 ? size * 2.4 : size, height: size)
+                        .shadow(color: colors[index % colors.count].opacity(0.72), radius: 4)
                         .rotationEffect(.radians(angle))
                         .position(
                             x: center.x + cos(angle) * (particlesAreFlying ? distance : startDistance),
                             y: center.y + sin(angle) * (particlesAreFlying ? distance : startDistance)
                         )
-                        .opacity(particlesAreFlying ? 0.02 : 0.92)
+                        .opacity(particlesAreFlying ? 0.01 : 0.82)
                         .animation(
-                            .easeOut(duration: 0.75 + Double(index % 9) * 0.09)
+                            .easeOut(duration: 0.72 + Double(index % 9) * 0.075)
                                 .repeatForever(autoreverses: false)
                                 .delay(Double(index % 13) * 0.055),
                             value: particlesAreFlying
                         )
                 }
-
-                ForEach(0..<3) { index in
-                    Ellipse()
-                        .trim(from: 0.05, to: 0.38)
-                        .stroke(
-                            colors[index].opacity(0.55),
-                            style: StrokeStyle(lineWidth: CGFloat(3 + index), lineCap: .round)
-                        )
-                        .frame(width: CGFloat(390 + index * 75), height: CGFloat(170 + index * 28))
-                        .rotationEffect(.degrees(vortexIsTurning ? Double(360 + index * 55) : Double(index * 55)))
-                        .position(center)
-                }
             }
         }
         .onAppear {
-            withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) {
-                vortexIsTurning = true
-            }
             particlesAreFlying = true
-            ringsAreExpanding = true
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
