@@ -1,0 +1,73 @@
+PRÉPARER LA CARTE SD DU PROJECTEUR
+==================================
+
+1. Placez la vidéo « love.mov » dans le dossier Téléchargements.
+   Si ce fichier n’existe pas, l’outil vous demandera de choisir une vidéo.
+
+2. Insérez la carte SD. Elle doit s’appeler « CK ».
+
+3. Double-cliquez sur « Preparer-carte-SD.command ».
+
+   Lors de la toute première ouverture, macOS peut afficher « Élément non
+   ouvert » parce que cet outil n’est pas signé par un développeur Apple.
+   Cliquez alors sur « Terminé » — surtout pas sur « Placer dans la corbeille » —
+   puis suivez la procédure « Première ouverture » ci-dessous.
+
+4. Vérifiez le nom de la vidéo et la taille de la carte affichés à l’écran.
+
+5. Pour confirmer l’effacement complet de la carte, tapez OUI en majuscules,
+   puis appuyez sur Entrée.
+
+6. Attendez le message de succès. L’outil efface tous les fichiers de la carte,
+   y compris les fichiers invisibles et la corbeille de la carte. Il copie la
+   vidéo sans reformater la carte, vérifie intégralement la copie, contrôle qu’il
+   ne reste rien d’autre, puis éjecte automatiquement la carte.
+
+   Une seule copie est effectuée. La copie affiche son pourcentage et son temps
+   écoulé. Si elle ne progresse plus pendant 90 secondes, l’outil l’arrête et
+   signale probablement un problème de carte, d’adaptateur ou de lecteur.
+
+Ne retirez jamais la carte pendant le nettoyage, la copie ou la vérification.
+
+Première ouverture : autoriser l’outil dans macOS
+-------------------------------------------------
+
+1. Après l’alerte « Élément non ouvert », cliquez sur « Terminé ».
+
+2. Ouvrez le menu Pomme , puis « Réglages Système ».
+
+3. Ouvrez « Confidentialité et sécurité » dans la colonne de gauche.
+
+4. Descendez jusqu’à la partie « Sécurité ».
+
+5. À côté du message concernant « Preparer-carte-SD.command », cliquez sur
+   « Ouvrir quand même ».
+
+6. Saisissez le mot de passe de la session Mac, puis confirmez avec « Ouvrir ».
+
+Cette autorisation n’est nécessaire que lors de la première ouverture. Le bouton
+« Ouvrir quand même » reste disponible pendant environ une heure après l’alerte.
+S’il n’apparaît pas, essayez à nouveau d’ouvrir le fichier, cliquez sur « Terminé »,
+puis retournez immédiatement dans « Confidentialité et sécurité ».
+
+Messages importants
+-------------------
+
+« Erreur d’écriture » indique généralement une carte SD, un adaptateur ou un
+lecteur défectueux. Le logiciel ne peut pas réparer une carte physiquement
+défaillante : essayez une autre carte ou un autre lecteur.
+
+Si une fenêtre demande le mot de passe du Mac, elle sert uniquement à supprimer
+un dossier macOS protégé sur la carte SD. L’outil ne vide jamais la corbeille
+générale du Mac : seulement le dossier de corbeille présent sur la carte CK.
+
+La VERSION 8 arrête d’abord Spotlight, empêche temporairement la recréation de
+`.Spotlight-V100`, `.fseventsd` et `.Trashes`, puis enlève ces protections juste
+avant l’éjection. Les commandes Spotlight sont limitées à 12 secondes afin
+qu’elles ne puissent pas rester bloquées indéfiniment.
+
+Si le message « Operation not permitted » apparaît encore, il s’agit du réglage
+de confidentialité de macOS, pas du mot de passe. L’outil ouvrira les Réglages
+Système. Dans « Confidentialité et sécurité » > « Fichiers et dossiers »,
+activez « Volumes amovibles » pour Terminal, puis relancez l’outil. Sur certaines
+versions de macOS, cette autorisation se trouve dans « Général » > « Stockage ».

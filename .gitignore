@@ -1,0 +1,5 @@
+.DS_Store
+CarteClaire/.build/
+CarteClaire/Build/
+build-output/
+*.xcuserstate

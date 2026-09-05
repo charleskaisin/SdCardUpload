@@ -1,0 +1,32 @@
+CARTE CLAIRE — MODE D’EMPLOI
+
+La VERSION 4 adopte la silhouette d’une véritable carte SD, avec son coin coupé
+et ses contacts dorés. Faites glisser le fond de la carte pour déplacer
+l’application. Le bouton « Quitter » est intégré dans son en-tête.
+
+1. Ouvrez « Carte Claire » et laissez l’application ouverte.
+2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.
+3. Insérez une carte SD nommée CK.
+4. Quand l’application affiche « Carte CK détectée », cliquez sur « Préparer la carte ».
+5. Confirmez. L’application vide uniquement cette carte, copie une seule fois la vidéo, vérifie la copie, enlève les fichiers invisibles puis éjecte la carte.
+6. Quand « Mission accomplie ! » apparaît, retirez la carte et insérez la suivante. Il n’est pas nécessaire de relancer l’application.
+
+IMPORTANT
+
+- Tout ce qui se trouve sur la carte CK est définitivement supprimé.
+- La carte n’est jamais reformatée.
+- La corbeille générale du Mac n’est jamais touchée ; seule celle de la carte est vidée.
+- Ne retirez pas la carte pendant une opération.
+- Si macOS demande le mot de passe de la session, c’est uniquement pour retirer un dossier Spotlight protégé sur la carte.
+- Au premier accès à une carte, cliquez sur « Autoriser » lorsque macOS demande l’accès aux volumes amovibles.
+- Si l’accès a été refusé, utilisez le bouton « Autoriser l’accès aux cartes… » dans l’application, puis activez Carte Claire dans les réglages indiqués.
+- Si une erreur d’entrée/sortie apparaît, essayez une autre carte, un autre adaptateur ou un autre lecteur.
+
+PREMIÈRE OUVERTURE SUR UN MAC
+
+Si macOS bloque l’application :
+1. Faites un clic droit sur « Carte Claire », puis choisissez « Ouvrir ».
+2. Confirmez avec « Ouvrir ».
+3. Si le bouton n’apparaît pas, allez dans Réglages Système > Confidentialité et sécurité, puis cliquez sur « Ouvrir quand même ».
+
+La vidéo par défaut est « love.mov » dans le dossier Téléchargements. Une autre vidéo peut être choisie directement dans l’application.
