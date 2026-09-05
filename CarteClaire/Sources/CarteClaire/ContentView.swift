@@ -14,7 +14,7 @@ struct ContentView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 64, style: .continuous)
                 .fill(backgroundGradient)
-                .frame(width: 576, height: 744)
+                .frame(width: 576, height: 680)
                 .overlay(
                     RoundedRectangle(cornerRadius: 64, style: .continuous)
                         .stroke(
@@ -43,24 +43,16 @@ struct ContentView: View {
             .buttonStyle(QuitButtonStyle())
             .accessibilityLabel("Quitter")
             .help("Quitter")
-            .offset(x: 250, y: -335)
+            .offset(x: 232, y: -286)
 
             if controller.phase == .success {
                 CelebrationDots()
-                    .frame(width: 576, height: 744)
+                    .frame(width: 576, height: 680)
                     .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
             }
         }
-        .frame(width: 640, height: 780)
+        .frame(width: 640, height: 716)
         .background(WindowConfigurator())
-        .alert(isPresented: $controller.showingConfirmation) {
-            Alert(
-                title: Text("Vider complètement la carte CK ?"),
-                message: Text("Tous ses fichiers, y compris les éléments invisibles et sa corbeille, seront définitivement supprimés. La carte ne sera pas reformatée."),
-                primaryButton: .destructive(Text("Vider et préparer"), action: controller.prepareConfirmed),
-                secondaryButton: .cancel(Text("Annuler"))
-            )
-        }
         .onAppear {
             withAnimation(.linear(duration: 18).repeatForever(autoreverses: false)) {
                 orbitIsTurning = true
@@ -133,7 +125,7 @@ struct ContentView: View {
                     )
             }
         }
-        .frame(width: 576, height: 744)
+        .frame(width: 576, height: 680)
         .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -141,13 +133,10 @@ struct ContentView: View {
 
     private var videoPill: some View {
         HStack(spacing: 11) {
-            ZStack {
-                Circle()
-                    .fill(Color.pink.opacity(0.24))
-                    .frame(width: 38, height: 38)
-                Image(systemName: "film.fill")
-                    .foregroundColor(.pink)
-            }
+            Image(systemName: "film.fill")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 28, height: 38)
 
             Text(controller.videoURL?.lastPathComponent ?? "Choisissez une vidéo")
                 .font(.system(size: 15, weight: .bold, design: .rounded))
@@ -197,7 +186,7 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(width: 410, height: 400)
+        .frame(width: 410, height: 382)
     }
 
     private var centralStatus: some View {
@@ -285,8 +274,8 @@ struct ContentView: View {
             .scaleEffect(controller.phase == .ready && pulseIsGrowing ? 1.018 : 1)
 
             if controller.needsAccessHelp {
-                Button(action: controller.openAccessSettings) {
-                    Label("Autoriser l’accès aux cartes…", systemImage: "gearshape.fill")
+                Button(action: controller.requestCardAccess) {
+                    Label("Donner accès à CK…", systemImage: "folder.badge.plus")
                 }
                 .buttonStyle(OrbitLinkButtonStyle(color: .orange))
             } else if controller.canEject && controller.phase != .working {

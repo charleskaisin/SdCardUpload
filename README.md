@@ -4,13 +4,13 @@ Carte Claire prépare les cartes SD utilisées par le projecteur : elle vide une
 carte nommée `CK`, copie une seule vidéo, vérifie la copie octet par octet,
 supprime les fichiers invisibles de macOS et éjecte la carte en toute sécurité.
 
-![Aperçu de Carte Claire](docs/Apercu-Carte-Claire-v4.2.jpg)
+![Aperçu de Carte Claire](docs/Apercu-Carte-Claire-v4.3.jpg)
 
 <img src="docs/Icone-Carte-Claire-v4.2.png" alt="Icône de Carte Claire" width="180">
 
 ## Versions prêtes à utiliser
 
-- [Carte Claire 4.2 — application macOS](dist/Carte-Claire-v4.2.zip)
+- [Carte Claire 4.3 — application macOS](dist/Carte-Claire-v4.3.zip)
 - [Outil ligne de commande — VERSION 8](dist/Outil-carte-SD-v8.0.zip)
 
 L’application est recommandée pour l’équipe. Sa fenêtre arrondie reprend les
@@ -22,7 +22,7 @@ cartes et détecte automatiquement la prochaine carte `CK`.
 1. Placez `love.mov` dans le dossier Téléchargements, ou choisissez une autre
    vidéo avec le bouton **Changer**.
 2. Insérez une carte SD nommée `CK`.
-3. Cliquez sur **Préparer la carte**, puis confirmez.
+3. Cliquez sur **GO !**. Le nettoyage commence directement.
 4. Attendez le message de réussite et l’éjection automatique.
 5. Retirez la carte et insérez la suivante ; l’application reste ouverte.
 
@@ -33,19 +33,21 @@ cartes et détecte automatiquement la prochaine carte `CK`.
 - Le support est contrôlé comme externe avant tout effacement.
 - La vidéo source ne peut pas se trouver sur la carte à vider.
 - Une seule copie est réalisée et sa progression est surveillée.
+- Aucun mot de passe administrateur n’est demandé par l’application.
 - La copie est comparée intégralement avec l’original.
 - Le résultat final doit contenir exactement la vidéo choisie.
 - La corbeille générale du Mac n’est jamais touchée ; seule celle de la carte
   est supprimée.
 
-Tout ce qui se trouve déjà sur la carte `CK` est définitivement supprimé après
-confirmation.
+Tout ce qui se trouve déjà sur la carte `CK` est définitivement supprimé dès le
+clic sur **GO !**.
 
 ## Autorisations macOS
 
 Lors du premier accès, macOS peut demander l’autorisation d’utiliser les volumes
-amovibles. Cliquez sur **Autoriser**. Si l’accès avait été refusé, Carte Claire
-affiche un bouton qui ouvre directement les réglages correspondants.
+amovibles. Cliquez sur **Autoriser**. Si l’accès est bloqué, Carte Claire affiche
+**Donner accès à CK…** : sélectionnez la carte CK dans Volumes et l’application
+réessaiera automatiquement, sans demander de mot de passe administrateur.
 
 L’application fournie est signée localement, mais pas notariée avec un compte
 Apple Developer. À la première ouverture sur un nouveau Mac, un clic droit sur

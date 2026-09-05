@@ -1,6 +1,6 @@
 CARTE CLAIRE — MODE D’EMPLOI
 
-La VERSION 4.2 adopte une fenêtre très arrondie, des animations inspirées de sa
+La VERSION 4.3 adopte une fenêtre plus compacte, des animations inspirées de sa
 nouvelle icône et une interface volontairement simple. Faites glisser le fond de
 la fenêtre pour déplacer l’application. Le bouton × placé en haut à droite
 permet de la quitter.
@@ -8,8 +8,8 @@ permet de la quitter.
 1. Ouvrez « Carte Claire » et laissez l’application ouverte.
 2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.
 3. Insérez une carte SD nommée CK.
-4. Quand l’application affiche « Carte CK détectée », cliquez sur « GO ! ».
-5. Confirmez. L’application vide uniquement cette carte, copie une seule fois la vidéo, vérifie la copie, enlève les fichiers invisibles puis éjecte la carte.
+4. Quand l’application affiche « Carte CK détectée », cliquez sur « GO ! ». Le nettoyage commence directement.
+5. L’application vide uniquement cette carte, copie une seule fois la vidéo, vérifie la copie, enlève les fichiers invisibles puis éjecte la carte.
 6. Quand « Mission accomplie ! » apparaît, retirez la carte et insérez la suivante. Il n’est pas nécessaire de relancer l’application.
 
 IMPORTANT
@@ -18,9 +18,8 @@ IMPORTANT
 - La carte n’est jamais reformatée.
 - La corbeille générale du Mac n’est jamais touchée ; seule celle de la carte est vidée.
 - Ne retirez pas la carte pendant une opération.
-- Si macOS demande le mot de passe de la session, c’est uniquement pour retirer un dossier Spotlight protégé sur la carte.
 - Au premier accès à une carte, cliquez sur « Autoriser » lorsque macOS demande l’accès aux volumes amovibles.
-- Si l’accès a été refusé, utilisez le bouton « Autoriser l’accès aux cartes… » dans l’application, puis activez Carte Claire dans les réglages indiqués.
+- Carte Claire ne demande plus de mot de passe administrateur. Si macOS bloque la carte, utilisez « Donner accès à CK… », choisissez la carte CK dans Volumes, puis l’app réessaiera automatiquement.
 - Si une erreur d’entrée/sortie apparaît, essayez une autre carte, un autre adaptateur ou un autre lecteur.
 
 PREMIÈRE OUVERTURE SUR UN MAC

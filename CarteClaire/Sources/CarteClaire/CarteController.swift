@@ -15,15 +15,16 @@ final class CarteController: ObservableObject {
     @Published var statusTitle = "Insérez une carte SD"
     @Published var statusDetail = "L’app attend une carte nommée CK."
     @Published var errorMessage = ""
-    @Published var showingConfirmation = false
     @Published var needsAccessHelp = false
 
     private let fileManager = FileManager.default
     private var detectionTimer: Timer?
     private var inspectionInProgress = false
     private var operationInProgress = false
+    private var activeCardAccessURL: URL?
 
     init() {
+        restoreCardAccess()
         restoreVideoSelection()
         detectionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.pollForCard()
@@ -33,6 +34,7 @@ final class CarteController: ObservableObject {
 
     deinit {
         detectionTimer?.invalidate()
+        activeCardAccessURL?.stopAccessingSecurityScopedResource()
     }
 
     var canPrepare: Bool {
@@ -55,16 +57,69 @@ final class CarteController: ObservableObject {
     }
 
     func askToPrepare() {
-        guard canPrepare else { return }
-        showingConfirmation = true
+        prepareConfirmed()
     }
 
-    func openAccessSettings() {
-        let modern = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_FilesAndFolders")
-        let legacy = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders")
+    func requestCardAccess() {
+        guard !operationInProgress else { return }
 
-        if let modern, NSWorkspace.shared.open(modern) { return }
-        if let legacy { NSWorkspace.shared.open(legacy) }
+        let panel = NSOpenPanel()
+        panel.title = "Donner accès à la carte CK"
+        panel.message = "Sélectionnez la carte CK dans Volumes, puis cliquez sur Autoriser."
+        panel.prompt = "Autoriser"
+        panel.directoryURL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+
+        guard panel.runModal() == .OK, let selected = panel.url else { return }
+        guard selected.standardizedFileURL.path == Self.volumePath else {
+            statusTitle = "Choisissez la carte CK"
+            statusDetail = "La carte sélectionnée doit être /Volumes/CK."
+            return
+        }
+
+        activeCardAccessURL?.stopAccessingSecurityScopedResource()
+        _ = selected.startAccessingSecurityScopedResource()
+        activeCardAccessURL = selected
+
+        if let bookmark = try? selected.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ) {
+            UserDefaults.standard.set(bookmark, forKey: "cardAccessBookmark")
+        }
+
+        needsAccessHelp = false
+        phase = .ready
+        statusTitle = "Accès accordé"
+        statusDetail = "Nouvelle tentative…"
+        prepareConfirmed()
+    }
+
+    private func restoreCardAccess() {
+        guard let data = UserDefaults.standard.data(forKey: "cardAccessBookmark") else { return }
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: data,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ), url.standardizedFileURL.path == Self.volumePath else { return }
+
+        _ = url.startAccessingSecurityScopedResource()
+        activeCardAccessURL = url
+
+        if isStale,
+           let refreshed = try? url.bookmarkData(
+               options: .withSecurityScope,
+               includingResourceValuesForKeys: nil,
+               relativeTo: nil
+           ) {
+            UserDefaults.standard.set(refreshed, forKey: "cardAccessBookmark")
+        }
     }
 
     func chooseVideo() {
@@ -267,6 +322,11 @@ final class CarteController: ObservableObject {
                 arguments: ["-i", "off", card.mountPath],
                 timeout: 12
             )
+            _ = runTool(
+                executable: "/usr/bin/mdutil",
+                arguments: ["-X", card.mountPath],
+                timeout: 12
+            )
             try ensureRegularFile(at: spotlightMarker, description: "la protection Spotlight")
             try removeItems(on: card, keeping: [spotlightMarker])
             let emptyItems = try volumeItems(at: card.mountPath).filter {
@@ -360,7 +420,7 @@ final class CarteController: ObservableObject {
             DispatchQueue.main.async {
                 let needsAccess = self.requiresAccessSettings(for: error)
                 let displayedError = needsAccess
-                    ? "macOS bloque l’accès aux fichiers invisibles de cette carte. Cliquez sur « Autoriser l’accès… », activez les volumes amovibles pour Carte Claire, puis réessayez."
+                    ? "macOS n’a pas autorisé Carte Claire à modifier cette carte. Cliquez sur « Donner accès à CK… », choisissez CK, puis l’app réessaiera sans demander de mot de passe."
                     : error.localizedDescription
                 self.operationInProgress = false
                 self.phase = .failure
@@ -404,7 +464,7 @@ final class CarteController: ObservableObject {
                 do {
                     try fileManager.removeItem(at: trashMarker)
                 } catch {
-                    try adminDelete(paths: [trashMarker], volumePath: card.mountPath)
+                    try deleteWithoutPassword(paths: [trashMarker])
                 }
             }
 
@@ -419,7 +479,7 @@ final class CarteController: ObservableObject {
 
     private func removableVolumeAccessError() -> CardPrepError {
         CardPrepError.removableVolumePermission(
-            "macOS bloque l’accès aux fichiers invisibles de cette carte. Cliquez sur « Autoriser l’accès… », activez les volumes amovibles pour Carte Claire, puis réessayez."
+            "macOS n’a pas autorisé Carte Claire à modifier cette carte. Cliquez sur « Donner accès à CK… », choisissez CK, puis l’app réessaiera sans demander de mot de passe."
         )
     }
 
@@ -463,8 +523,8 @@ final class CarteController: ObservableObject {
         }
 
         if !protectedItems.isEmpty {
-            updateDetail("macOS demande une autorisation pour terminer le nettoyage…", progress: nil)
-            try adminDelete(paths: protectedItems, volumePath: card.mountPath)
+            updateDetail("Nouvelle tentative de nettoyage…", progress: nil)
+            try deleteWithoutPassword(paths: protectedItems)
         }
 
         items = try volumeItems(at: card.mountPath)
@@ -474,64 +534,42 @@ final class CarteController: ObservableObject {
         }
     }
 
-    private func adminDelete(paths: [URL], volumePath: String) throws {
+    private func deleteWithoutPassword(paths: [URL]) throws {
         guard !paths.isEmpty else { return }
 
-        let script = """
-        use scripting additions
-        on run argv
-            set volumePath to item 1 of argv
-            set itemPaths to items 2 thru -1 of argv
-            set spotlightPath to volumePath & "/.Spotlight-V100"
-            set containsSpotlight to false
-            set flagsCommand to "/bin/chflags -R nouchg,noschg"
-            set aclCommand to "/bin/chmod -RN"
-            set modeCommand to "/bin/chmod -R u+rwX"
-            set xattrCommand to "/usr/bin/xattr -cr"
-            set removeCommand to "/bin/rm -rf"
-            set absentCommand to ""
-            repeat with itemPath in itemPaths
-                set quotedPath to quoted form of (contents of itemPath)
-                set flagsCommand to flagsCommand & " " & quotedPath
-                set aclCommand to aclCommand & " " & quotedPath
-                set modeCommand to modeCommand & " " & quotedPath
-                set xattrCommand to xattrCommand & " " & quotedPath
-                set removeCommand to removeCommand & " " & quotedPath
-                if absentCommand is not "" then set absentCommand to absentCommand & " && "
-                set absentCommand to absentCommand & "/bin/test ! -e " & quotedPath
-                if (contents of itemPath) is spotlightPath then set containsSpotlight to true
-            end repeat
-            set shellCommand to ""
-            if containsSpotlight then
-                set alarmProgram to "alarm 12; exec @ARGV"
-                set shellCommand to "/usr/bin/perl -e " & quoted form of alarmProgram & " /usr/bin/mdutil -i off " & quoted form of volumePath & " >/dev/null 2>&1; /usr/bin/perl -e " & quoted form of alarmProgram & " /usr/bin/mdutil -X " & quoted form of volumePath & " >/dev/null 2>&1; "
-            end if
-            set shellCommand to shellCommand & flagsCommand & " >/dev/null 2>&1; " & aclCommand & " >/dev/null 2>&1; " & modeCommand & " >/dev/null 2>&1; " & xattrCommand & " >/dev/null 2>&1; attempt=1; while /bin/test $attempt -le 3; do " & removeCommand & "; " & absentCommand & " && exit 0; /bin/sleep 1; attempt=$((attempt + 1)); done; exit 1"
-            do shell script shellCommand with administrator privileges
-        end run
-        """
+        var diagnostics = ""
 
-        var arguments = ["-e", script, volumePath]
-        arguments.append(contentsOf: paths.map(\.path))
-        let result = runTool(
-            executable: "/usr/bin/osascript",
-            arguments: arguments,
-            timeout: 300
-        )
+        for item in paths {
+            for attempt in 0..<3 {
+                guard fileManager.fileExists(atPath: item.path) else { break }
 
-        guard result.status == 0 else {
-            if result.timedOut {
-                throw CardPrepError.message("La demande d’autorisation administrateur a expiré.")
-            }
-            let diagnostic = result.output.lowercased()
-            if diagnostic.contains("operation not permitted") ||
-                diagnostic.contains("permission denied") ||
-                diagnostic.contains("not permitted") {
-                throw CardPrepError.removableVolumePermission(
-                    "macOS bloque l’accès aux fichiers invisibles de cette carte. Cliquez sur « Autoriser l’accès… », activez les volumes amovibles pour Carte Claire, puis réessayez."
+                if attempt == 0 {
+                    _ = runTool(executable: "/bin/chflags", arguments: ["-R", "nouchg,noschg", item.path], timeout: 30)
+                    _ = runTool(executable: "/bin/chmod", arguments: ["-RN", item.path], timeout: 30)
+                    _ = runTool(executable: "/bin/chmod", arguments: ["-R", "u+rwX", item.path], timeout: 30)
+                    _ = runTool(executable: "/usr/bin/xattr", arguments: ["-cr", item.path], timeout: 30)
+                }
+
+                let result = runTool(
+                    executable: "/bin/rm",
+                    arguments: ["-rf", "--", item.path],
+                    timeout: 90
                 )
+                diagnostics += "\n" + result.output
+                if result.timedOut { break }
+                if fileManager.fileExists(atPath: item.path) {
+                    Thread.sleep(forTimeInterval: 0.7)
+                }
             }
-            throw CardPrepError.message("L’autorisation administrateur a été annulée ou refusée.")
+        }
+
+        let remaining = paths.filter { fileManager.fileExists(atPath: $0.path) }
+        guard remaining.isEmpty else {
+            let diagnostic = diagnostics.lowercased()
+            if diagnostic.contains("input/output error") || diagnostic.contains("i/o error") {
+                throw CardPrepError.message("La carte a renvoyé une erreur de lecture/écriture. Essayez une autre carte ou un autre lecteur.")
+            }
+            throw removableVolumeAccessError()
         }
     }
 
