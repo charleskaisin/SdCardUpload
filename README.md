@@ -4,16 +4,16 @@ Carte Claire prépare les cartes SD utilisées par le projecteur : elle vide une
 carte nommée `CK`, copie une seule vidéo, vérifie la copie octet par octet,
 supprime les fichiers invisibles de macOS et éjecte la carte en toute sécurité.
 
-![Aperçu de Carte Claire 4](docs/Apercu-Carte-Claire-v4.jpg)
+![Aperçu de Carte Claire](docs/Apercu-Carte-Claire-v4.1.jpg)
 
 ## Versions prêtes à utiliser
 
-- [Carte Claire 4.0 — application macOS](dist/Carte-Claire-v4.0-forme-SD.zip)
+- [Carte Claire 4.1 — application macOS](dist/Carte-Claire-v4.1-forme-SD.zip)
 - [Outil ligne de commande — VERSION 8](dist/Outil-carte-SD-v8.0.zip)
 
-L’application est recommandée pour l’équipe. Elle possède une fenêtre en forme
-de carte SD, reste ouverte entre deux cartes et détecte automatiquement la
-prochaine carte `CK`.
+L’application est recommandée pour l’équipe. Sa fenêtre arrondie reprend les
+proportions d’une carte SD, reste ouverte entre deux cartes et détecte
+automatiquement la prochaine carte `CK`.
 
 ## Fonctionnement
 

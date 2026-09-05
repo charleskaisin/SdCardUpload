@@ -7,12 +7,13 @@ struct ContentView: View {
     @ObservedObject var controller: CarteController
     @State private var orbitIsTurning = false
     @State private var pulseIsGrowing = false
+    @State private var ambientIsFloating = false
 
     var body: some View {
         ZStack {
             SDCardWindowShape()
                 .fill(backgroundGradient)
-                .frame(width: 640, height: 700)
+                .frame(width: 576, height: 744)
                 .overlay(
                     SDCardWindowShape()
                         .stroke(
@@ -20,31 +21,37 @@ struct ContentView: View {
                                 gradient: Gradient(colors: [electricCyan, .purple, .pink, .orange, electricCyan]),
                                 center: .center
                             ),
-                            lineWidth: 5
+                            lineWidth: 6
                         )
                         .padding(4)
                 )
                 .shadow(color: phaseColor.opacity(0.42), radius: 28, x: 0, y: 12)
 
-            decorativeCardLines
+            playfulGlow
 
-            VStack(spacing: 8) {
-                contactPins
+            VStack(spacing: 12) {
                 header
                 videoPill
                 missionOrbit
                 actionArea
-                footer
             }
-            .frame(width: 590)
+            .frame(width: 510)
+
+            Button(action: { NSApplication.shared.terminate(nil) }) {
+                Image(systemName: "xmark")
+            }
+            .buttonStyle(QuitButtonStyle())
+            .accessibilityLabel("Quitter")
+            .help("Quitter")
+            .offset(x: 250, y: -335)
 
             if controller.phase == .success {
                 CelebrationDots()
                     .clipShape(SDCardWindowShape())
-                    .frame(width: 640, height: 700)
+                    .frame(width: 576, height: 744)
             }
         }
-        .frame(width: 720, height: 720)
+        .frame(width: 640, height: 780)
         .background(WindowConfigurator())
         .alert(isPresented: $controller.showingConfirmation) {
             Alert(
@@ -60,6 +67,9 @@ struct ContentView: View {
             }
             withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
                 pulseIsGrowing = true
+            }
+            withAnimation(.easeInOut(duration: 4.2).repeatForever(autoreverses: true)) {
+                ambientIsFloating = true
             }
         }
     }
@@ -77,74 +87,54 @@ struct ContentView: View {
         )
     }
 
-    private var decorativeCardLines: some View {
+    private var playfulGlow: some View {
         ZStack {
-            SDCardWindowShape()
-                .stroke(Color.white.opacity(0.06), style: StrokeStyle(lineWidth: 1, dash: [3, 12]))
-                .frame(width: 606, height: 666)
+            Circle()
+                .fill(Color.purple.opacity(0.18))
+                .frame(width: 250, height: 250)
+                .blur(radius: 38)
+                .offset(x: ambientIsFloating ? 145 : 105, y: ambientIsFloating ? -180 : -130)
 
-            VStack(spacing: 7) {
-                ForEach(0..<3) { index in
-                    Capsule()
-                        .fill([electricCyan, Color.purple, Color.pink][index].opacity(0.10))
-                        .frame(width: CGFloat(290 - index * 38), height: 2)
-                }
+            Circle()
+                .fill(electricCyan.opacity(0.12))
+                .frame(width: 220, height: 220)
+                .blur(radius: 42)
+                .offset(x: ambientIsFloating ? -150 : -105, y: ambientIsFloating ? 235 : 190)
+
+            ForEach(0..<9) { index in
+                Circle()
+                    .fill([electricCyan, Color.pink, Color.purple][index % 3].opacity(0.30))
+                    .frame(width: CGFloat(3 + index % 3), height: CGFloat(3 + index % 3))
+                    .offset(
+                        x: CGFloat((index * 71) % 440) - 220,
+                        y: CGFloat((index * 109) % 580) - 290 + (ambientIsFloating ? -8 : 8)
+                    )
             }
-            .offset(y: 285)
         }
+        .clipShape(SDCardWindowShape())
+        .frame(width: 576, height: 744)
         .allowsHitTesting(false)
     }
 
-    private var contactPins: some View {
-        HStack(spacing: 7) {
-            ForEach(0..<7) { index in
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.yellow, Color.orange.opacity(0.88)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(width: index == 0 || index == 6 ? 26 : 34, height: 25)
-                    .shadow(color: .orange.opacity(0.28), radius: 5)
-            }
-        }
-        .frame(width: 420, height: 31)
-        .padding(.leading, 72)
-    }
-
     private var header: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 9) {
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(colors: [electricCyan, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "sdcard.fill")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.white)
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Carte Claire")
-                        .font(.system(size: 25, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                    Text("UNE CARTE • UNE VIDÉO • GO !")
-                        .font(.system(size: 8.5, weight: .bold, design: .rounded))
-                        .tracking(1.4)
-                        .foregroundColor(electricCyan.opacity(0.9))
-                }
+        HStack(spacing: 11) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(colors: [electricCyan, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 44, height: 44)
+                    .shadow(color: .pink.opacity(0.28), radius: 9)
+                Image(systemName: "sdcard.fill")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.white)
             }
+
+            Text("Carte Claire")
+                .font(.system(size: 27, weight: .black, design: .rounded))
+                .foregroundColor(.white)
 
             Spacer()
-
-            Button(action: { NSApplication.shared.terminate(nil) }) {
-                Label("Quitter", systemImage: "xmark")
-            }
-            .buttonStyle(QuitButtonStyle())
         }
-        .frame(width: 510, height: 52)
+        .frame(width: 482, height: 48)
     }
 
     private var videoPill: some View {
@@ -157,16 +147,10 @@ struct ContentView: View {
                     .foregroundColor(.pink)
             }
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("VIDÉO À EMBARQUER")
-                    .font(.system(size: 9, weight: .black, design: .rounded))
-                    .tracking(1.1)
-                    .foregroundColor(.white.opacity(0.58))
-                Text(controller.videoURL?.lastPathComponent ?? "Choisissez une vidéo")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-            }
+            Text(controller.videoURL?.lastPathComponent ?? "Choisissez une vidéo")
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .lineLimit(1)
 
             Spacer()
 
@@ -176,7 +160,7 @@ struct ContentView: View {
                 .disabled(controller.phase == .working)
         }
         .padding(.horizontal, 15)
-        .frame(width: 510, height: 58)
+        .frame(width: 482, height: 56)
         .background(Color.white.opacity(0.09))
         .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
         .clipShape(Capsule())
@@ -185,9 +169,14 @@ struct ContentView: View {
     private var missionOrbit: some View {
         GeometryReader { geometry in
             let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-            let radius: CGFloat = 151
+            let radius: CGFloat = 158
 
             ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1.5, dash: [3, 10]))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(orbitIsTurning ? 360 : 0))
+
                 centralStatus
                     .position(center)
 
@@ -206,7 +195,7 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(width: 390, height: 350)
+        .frame(width: 410, height: 382)
     }
 
     private var centralStatus: some View {
@@ -236,33 +225,41 @@ struct ContentView: View {
 
             VStack(spacing: 6) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(Color(red: 0.06, green: 0.08, blue: 0.18))
-                        .frame(width: 64, height: 76)
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(phaseColor, lineWidth: 3))
+                        .frame(width: 68, height: 82)
+                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(phaseColor, lineWidth: 3))
+                        .shadow(color: phaseColor.opacity(0.35), radius: 12)
 
                     Image(systemName: cardSymbol)
                         .font(.system(size: 28, weight: .black))
                         .foregroundColor(phaseColor)
                         .scaleEffect(pulseIsGrowing && controller.phase == .working ? 1.08 : 0.96)
                 }
+                .offset(y: pulseIsGrowing && controller.phase != .failure ? -2 : 2)
 
                 Text(controller.statusTitle)
-                    .font(.system(size: 17, weight: .black, design: .rounded))
+                    .font(.system(size: 18, weight: .black, design: .rounded))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
 
                 Text(controller.statusDetail)
-                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundColor(.white.opacity(0.66))
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
-                    .frame(width: 190)
+                    .frame(width: 194)
+
+                if controller.phase == .working, let progress = controller.progress {
+                    Text("\(Int(progress * 100)) %")
+                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .foregroundColor(electricCyan)
+                }
 
                 if let card = controller.card {
-                    Text("\(card.name)  •  \(card.sizeText)  •  \(shortFileSystem(card.fileSystem))")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    Text("\(card.name)  •  \(card.sizeText)")
+                        .font(.system(size: 9.5, weight: .bold, design: .rounded))
                         .foregroundColor(electricCyan.opacity(0.9))
                         .lineLimit(1)
                 }
@@ -277,13 +274,14 @@ struct ContentView: View {
             Button(action: controller.askToPrepare) {
                 HStack(spacing: 9) {
                     Image(systemName: controller.phase == .success ? "sparkles" : "play.fill")
-                    Text(controller.primaryButtonTitle)
+                    Text(primaryButtonTitle)
                 }
-                .frame(width: 390)
+                .frame(width: 374)
             }
-            .font(.system(size: 15, weight: .black, design: .rounded))
+            .font(.system(size: 17, weight: .black, design: .rounded))
             .buttonStyle(GlowCapsuleButtonStyle(color: .pink, compact: false))
             .disabled(!controller.canPrepare)
+            .scaleEffect(controller.phase == .ready && pulseIsGrowing ? 1.018 : 1)
 
             if controller.needsAccessHelp {
                 Button(action: controller.openAccessSettings) {
@@ -293,23 +291,19 @@ struct ContentView: View {
             } else if controller.canEject && controller.phase != .working {
                 Button("Éjecter sans préparer", action: controller.ejectCurrentCard)
                     .buttonStyle(OrbitLinkButtonStyle(color: electricCyan))
-            } else {
-                Text(controller.phase == .success
-                     ? "Retirez-la : la prochaine carte sera détectée automatiquement ✨"
-                     : "Aucun formatage • La corbeille du Mac reste intacte")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.54))
             }
         }
-        .frame(height: 72)
+        .frame(height: 62)
     }
 
-    private var footer: some View {
-        Text("CARTE CLAIRE 4.0")
-            .font(.system(size: 8, weight: .bold, design: .monospaced))
-            .tracking(1.5)
-            .foregroundColor(.white.opacity(0.25))
-            .frame(height: 12)
+    private var primaryButtonTitle: String {
+        switch controller.phase {
+        case .waiting: return "En attente…"
+        case .ready: return "GO !"
+        case .working: return "C’est parti…"
+        case .success: return "Carte suivante !"
+        case .failure: return controller.card == nil ? "Nouvelle carte" : "Réessayer"
+        }
     }
 
     private var ringProgress: CGFloat {
@@ -340,11 +334,6 @@ struct ContentView: View {
         }
     }
 
-    private func shortFileSystem(_ value: String) -> String {
-        if value.localizedCaseInsensitiveContains("FAT32") { return "FAT32" }
-        if value.localizedCaseInsensitiveContains("ExFAT") { return "ExFAT" }
-        return value
-    }
 }
 
 private struct OrbitStep: View {
@@ -352,36 +341,39 @@ private struct OrbitStep: View {
     let currentStep: Int
     let isWorking: Bool
     let phaseColor: Color
+    @State private var isBouncing = false
 
     private var completed: Bool { step.rawValue < currentStep }
     private var active: Bool { step.rawValue == currentStep && isWorking }
 
     var body: some View {
-        VStack(spacing: 3) {
-            ZStack {
-                Circle()
-                    .fill(completed ? Color.green : (active ? phaseColor : Color.white.opacity(0.11)))
-                    .frame(width: 42, height: 42)
-                    .overlay(Circle().stroke(active ? Color.white.opacity(0.8) : Color.white.opacity(0.10), lineWidth: 1.5))
-                    .shadow(color: active ? phaseColor.opacity(0.65) : .clear, radius: 9)
+        ZStack {
+            Circle()
+                .fill(completed ? Color.green : (active ? phaseColor : Color.white.opacity(0.11)))
+                .frame(width: 46, height: 46)
+                .overlay(Circle().stroke(active ? Color.white.opacity(0.8) : Color.white.opacity(0.10), lineWidth: 1.5))
+                .shadow(color: active ? phaseColor.opacity(0.70) : .clear, radius: 11)
 
-                Image(systemName: completed ? "checkmark" : step.symbol)
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundColor(completed || active ? .white : .white.opacity(0.52))
-            }
-
-            Text(step.title)
-                .font(.system(size: 9, weight: active ? .black : .bold, design: .rounded))
-                .foregroundColor(active ? .white : .white.opacity(0.55))
+            Image(systemName: completed ? "checkmark" : step.symbol)
+                .font(.system(size: 16, weight: .black))
+                .foregroundColor(completed || active ? .white : .white.opacity(0.52))
         }
-        .frame(width: 72, height: 62)
+        .frame(width: 54, height: 54)
+        .scaleEffect(active && isBouncing ? 1.12 : 1)
+        .offset(y: active && isBouncing ? -3 : 0)
+        .help(step.title)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                isBouncing = true
+            }
+        }
     }
 }
 
 private struct SDCardWindowShape: Shape {
     func path(in rect: CGRect) -> Path {
-        let radius: CGFloat = 26
-        let cut: CGFloat = min(118, rect.width * 0.20)
+        let radius: CGFloat = 46
+        let cut: CGFloat = min(124, rect.width * 0.22)
         var path = Path()
 
         path.move(to: CGPoint(x: rect.minX + cut + 10, y: rect.minY))
@@ -418,13 +410,13 @@ private struct SDCardWindowShape: Shape {
 private struct QuitButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .font(.system(size: 13, weight: .black, design: .rounded))
             .foregroundColor(.white.opacity(configuration.isPressed ? 0.65 : 0.9))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .frame(width: 34, height: 34)
             .background(Color.white.opacity(configuration.isPressed ? 0.08 : 0.13))
-            .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
-            .clipShape(Capsule())
+            .overlay(Circle().stroke(Color.white.opacity(0.16), lineWidth: 1))
+            .clipShape(Circle())
+            .scaleEffect(configuration.isPressed ? 0.9 : 1)
     }
 }
 
@@ -469,17 +461,24 @@ private struct OrbitLinkButtonStyle: ButtonStyle {
 
 private struct CelebrationDots: View {
     private let colors: [Color] = [.pink, .purple, electricCyan, .green, .orange, .yellow]
+    @State private var isCelebrating = false
 
     var body: some View {
         GeometryReader { geometry in
             ForEach(0..<24) { index in
-                Circle()
+                RoundedRectangle(cornerRadius: 2)
                     .fill(colors[index % colors.count].opacity(0.62))
-                    .frame(width: CGFloat(5 + index % 4), height: CGFloat(5 + index % 4))
+                    .frame(width: CGFloat(5 + index % 4), height: CGFloat(8 + index % 5))
+                    .rotationEffect(.degrees(isCelebrating ? Double(index * 95) : Double(index * 17)))
                     .position(
                         x: CGFloat((index * 83) % max(1, Int(geometry.size.width))),
-                        y: CGFloat((index * 137) % max(1, Int(geometry.size.height)))
+                        y: CGFloat((index * 137) % max(1, Int(geometry.size.height))) + (isCelebrating ? 42 : -42)
                     )
+            }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
+                isCelebrating = true
             }
         }
         .allowsHitTesting(false)

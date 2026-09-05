@@ -40,9 +40,9 @@ struct WindowConfigurator: NSViewRepresentable {
         window.backgroundColor = .clear
         window.hasShadow = false
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 720, height: 720)
-        window.maxSize = NSSize(width: 720, height: 720)
-        window.setContentSize(NSSize(width: 720, height: 720))
+        window.minSize = NSSize(width: 640, height: 780)
+        window.maxSize = NSSize(width: 640, height: 780)
+        window.setContentSize(NSSize(width: 640, height: 780))
         window.center()
         window.contentView?.wantsLayer = true
         window.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
