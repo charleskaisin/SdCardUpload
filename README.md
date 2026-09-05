@@ -10,7 +10,7 @@ supprime les fichiers invisibles de macOS et éjecte la carte en toute sécurit�
 
 ## Versions prêtes à utiliser
 
-- [Carte Claire 4.7 — application macOS](dist/Carte-Claire-v4.7.zip)
+- [Carte Claire 4.8 — application macOS](dist/Carte-Claire-v4.8.zip)
 - [Outil ligne de commande — VERSION 8](dist/Outil-carte-SD-v8.0.zip)
 
 L’application est recommandée pour l’équipe. Sa fenêtre arrondie reprend les
@@ -50,7 +50,7 @@ usage, macOS peut demander l’autorisation d’utiliser les volumes amovibles :
 cliquez sur **Autoriser**.
 
 Les dossiers Spotlight présents sur une carte sont protégés par macOS, même pour
-un processus administrateur. Carte Claire 4.7 détecte cette situation avant tout
+un processus administrateur. Carte Claire 4.8 détecte cette situation avant tout
 effacement et remplace toute l’interface par un guide d’autorisation. Son bouton ouvre directement
 **Réglages Système > Confidentialité et sécurité > Accès complet au disque** :
 activez **Carte Claire**, quittez l’app puis rouvrez-la. Cette opération n’est à

@@ -22,6 +22,8 @@ final class CarteController: ObservableObject {
     private var detectionTimer: Timer?
     private var inspectionInProgress = false
     private var operationInProgress = false
+    private var activeOutcomeSounds: [NSSound] = []
+    private var soundSequenceID = 0
     private let diagnosticQueue = DispatchQueue(label: "com.carteclaire.diagnostic")
     private lazy var diagnosticURL: URL = {
         fileManager.homeDirectoryForCurrentUser
@@ -68,8 +70,15 @@ final class CarteController: ObservableObject {
     func toggleSound() {
         soundEnabled.toggle()
         UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled")
+        soundSequenceID += 1
+        activeOutcomeSounds.forEach { $0.stop() }
+        activeOutcomeSounds.removeAll()
         if soundEnabled {
-            NSSound(named: NSSound.Name("Pop"))?.play()
+            if let sound = NSSound(named: NSSound.Name("Pop")) {
+                sound.volume = 1
+                activeOutcomeSounds = [sound]
+                sound.play()
+            }
         }
     }
 
@@ -424,14 +433,28 @@ final class CarteController: ObservableObject {
 
     private func playOutcomeSound(success: Bool) {
         guard soundEnabled else { return }
-        let names = success ? ["Glass", "Hero"] : ["Basso", "Funk"]
-        for name in names {
-            if let sound = NSSound(named: NSSound.Name(name)) {
-                sound.play()
-                return
+
+        soundSequenceID += 1
+        let sequenceID = soundSequenceID
+        activeOutcomeSounds.forEach { $0.stop() }
+        activeOutcomeSounds.removeAll()
+
+        let pattern: [(name: String, delay: TimeInterval)] = success
+            ? [("Hero", 0), ("Glass", 0.20), ("Ping", 0.55), ("Glass", 0.90), ("Hero", 1.30)]
+            : [("Basso", 0), ("Sosumi", 0.30), ("Basso", 0.68), ("Funk", 1.05)]
+
+        for cue in pattern {
+            DispatchQueue.main.asyncAfter(deadline: .now() + cue.delay) { [weak self] in
+                guard let self, self.soundEnabled, self.soundSequenceID == sequenceID else { return }
+                if let sound = NSSound(named: NSSound.Name(cue.name)) {
+                    sound.volume = 1
+                    self.activeOutcomeSounds.append(sound)
+                    sound.play()
+                } else {
+                    NSSound.beep()
+                }
             }
         }
-        NSSound.beep()
     }
 
     private func volumeItems(at mountPath: String) throws -> [URL] {

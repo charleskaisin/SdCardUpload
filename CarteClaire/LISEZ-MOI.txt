@@ -1,10 +1,11 @@
 CARTE CLAIRE — MODE D’EMPLOI
 
-La VERSION 4.7 garde une animation de copie très énergique, mais réserve le centre
+La VERSION 4.8 garde une animation de copie très énergique, mais réserve le centre
 aux informations importantes : les particules explosent autour du texte sans le
-masquer. Elle ajoute aussi des sons de réussite et d’erreur. Faites glisser le fond
-de la fenêtre pour déplacer l’application. Les boutons placés en haut à droite
-permettent de couper le son ou de quitter.
+masquer. Ses fanfares de réussite et ses alertes d’erreur sont volontairement
+fortes et répétées pour être entendues à distance. Faites glisser le fond de la
+fenêtre pour déplacer l’application. Les boutons placés en haut à droite permettent
+de couper le son ou de quitter.
 
 1. Ouvrez « Carte Claire » et laissez l’application ouverte.
 2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.
