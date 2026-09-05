@@ -10,7 +10,7 @@ supprime les fichiers invisibles de macOS et éjecte la carte en toute sécurit�
 
 ## Versions prêtes à utiliser
 
-- [Carte Claire 4.3 — application macOS](dist/Carte-Claire-v4.3.zip)
+- [Carte Claire 4.5 — application macOS](dist/Carte-Claire-v4.5.zip)
 - [Outil ligne de commande — VERSION 8](dist/Outil-carte-SD-v8.0.zip)
 
 L’application est recommandée pour l’équipe. Sa fenêtre arrondie reprend les
@@ -33,7 +33,8 @@ cartes et détecte automatiquement la prochaine carte `CK`.
 - Le support est contrôlé comme externe avant tout effacement.
 - La vidéo source ne peut pas se trouver sur la carte à vider.
 - Une seule copie est réalisée et sa progression est surveillée.
-- Aucun mot de passe administrateur n’est demandé par l’application.
+- Carte Claire vérifie ses autorisations avant tout effacement.
+- Aucun mot de passe administrateur n’est utilisé pendant la préparation.
 - La copie est comparée intégralement avec l’original.
 - Le résultat final doit contenir exactement la vidéo choisie.
 - La corbeille générale du Mac n’est jamais touchée ; seule celle de la carte
@@ -44,10 +45,18 @@ clic sur **GO !**.
 
 ## Autorisations macOS
 
-Lors du premier accès, macOS peut demander l’autorisation d’utiliser les volumes
-amovibles. Cliquez sur **Autoriser**. Si l’accès est bloqué, Carte Claire affiche
-**Donner accès à CK…** : sélectionnez la carte CK dans Volumes et l’application
-réessaiera automatiquement, sans demander de mot de passe administrateur.
+Placez d’abord Carte Claire dans le dossier **Applications**. Lors du premier
+usage, macOS peut demander l’autorisation d’utiliser les volumes amovibles :
+cliquez sur **Autoriser**.
+
+Les dossiers Spotlight présents sur une carte sont protégés par macOS, même pour
+un processus administrateur. Carte Claire 4.5 détecte cette situation avant tout
+effacement et affiche **Autoriser Carte Claire…**. Ce bouton ouvre directement
+**Réglages Système > Confidentialité et sécurité > Accès complet au disque** :
+activez **Carte Claire**, quittez l’app puis rouvrez-la. Cette opération n’est à
+faire qu’une fois par Mac pour cette version de l’app.
+
+Un diagnostic détaillé est conservé dans `~/Library/Logs/Carte Claire/`.
 
 L’application fournie est signée localement, mais pas notariée avec un compte
 Apple Developer. À la première ouverture sur un nouveau Mac, un clic droit sur

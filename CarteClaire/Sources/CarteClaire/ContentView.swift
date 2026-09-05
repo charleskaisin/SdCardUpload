@@ -274,8 +274,8 @@ struct ContentView: View {
             .scaleEffect(controller.phase == .ready && pulseIsGrowing ? 1.018 : 1)
 
             if controller.needsAccessHelp {
-                Button(action: controller.requestCardAccess) {
-                    Label("Donner accès à CK…", systemImage: "folder.badge.plus")
+                Button(action: controller.openFullDiskAccessSettings) {
+                    Label("Autoriser Carte Claire…", systemImage: "lock.open.fill")
                 }
                 .buttonStyle(OrbitLinkButtonStyle(color: .orange))
             } else if controller.canEject && controller.phase != .working {

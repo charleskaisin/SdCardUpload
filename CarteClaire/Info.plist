@@ -21,9 +21,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>4.3</string>
+	<string>4.5</string>
 	<key>CFBundleVersion</key>
-	<string>7</string>
+	<string>9</string>
     <key>LSMinimumSystemVersion</key>
     <string>11.0</string>
     <key>NSHighResolutionCapable</key>
@@ -34,7 +34,5 @@
     <string>Carte Claire doit lire la vidéo choisie dans votre dossier Téléchargements.</string>
 	<key>NSRemovableVolumesUsageDescription</key>
 	<string>Carte Claire doit vider la carte SD CK, copier la vidéo, retirer les fichiers invisibles et vérifier le résultat.</string>
-	<key>NSSystemAdministrationUsageDescription</key>
-	<string>Carte Claire demande une autorisation uniquement lorsqu’un dossier macOS protégé doit être retiré de la carte SD.</string>
 </dict>
 </plist>

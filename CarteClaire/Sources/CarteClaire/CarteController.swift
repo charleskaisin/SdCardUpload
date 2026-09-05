@@ -21,10 +21,15 @@ final class CarteController: ObservableObject {
     private var detectionTimer: Timer?
     private var inspectionInProgress = false
     private var operationInProgress = false
-    private var activeCardAccessURL: URL?
+    private let diagnosticQueue = DispatchQueue(label: "com.carteclaire.diagnostic")
+    private lazy var diagnosticURL: URL = {
+        fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Logs/Carte Claire", isDirectory: true)
+            .appendingPathComponent("Carte Claire.log")
+    }()
 
     init() {
-        restoreCardAccess()
+        logEvent("=== Démarrage de Carte Claire \(appVersion) ===")
         restoreVideoSelection()
         detectionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.pollForCard()
@@ -34,7 +39,6 @@ final class CarteController: ObservableObject {
 
     deinit {
         detectionTimer?.invalidate()
-        activeCardAccessURL?.stopAccessingSecurityScopedResource()
     }
 
     var canPrepare: Bool {
@@ -60,66 +64,21 @@ final class CarteController: ObservableObject {
         prepareConfirmed()
     }
 
-    func requestCardAccess() {
-        guard !operationInProgress else { return }
-
-        let panel = NSOpenPanel()
-        panel.title = "Donner accès à la carte CK"
-        panel.message = "Sélectionnez la carte CK dans Volumes, puis cliquez sur Autoriser."
-        panel.prompt = "Autoriser"
-        panel.directoryURL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.canCreateDirectories = false
-
-        guard panel.runModal() == .OK, let selected = panel.url else { return }
-        guard selected.standardizedFileURL.path == Self.volumePath else {
-            statusTitle = "Choisissez la carte CK"
-            statusDetail = "La carte sélectionnée doit être /Volumes/CK."
-            return
+    func openFullDiskAccessSettings() {
+        logEvent("Ouverture des réglages Accès complet au disque")
+        let candidates = [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles"
+        ]
+        for candidate in candidates {
+            if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
+                statusTitle = "Activez Carte Claire"
+                statusDetail = "Autorisez Carte Claire, puis quittez et rouvrez l’app."
+                return
+            }
         }
-
-        activeCardAccessURL?.stopAccessingSecurityScopedResource()
-        _ = selected.startAccessingSecurityScopedResource()
-        activeCardAccessURL = selected
-
-        if let bookmark = try? selected.bookmarkData(
-            options: .withSecurityScope,
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil
-        ) {
-            UserDefaults.standard.set(bookmark, forKey: "cardAccessBookmark")
-        }
-
-        needsAccessHelp = false
-        phase = .ready
-        statusTitle = "Accès accordé"
-        statusDetail = "Nouvelle tentative…"
-        prepareConfirmed()
-    }
-
-    private func restoreCardAccess() {
-        guard let data = UserDefaults.standard.data(forKey: "cardAccessBookmark") else { return }
-        var isStale = false
-        guard let url = try? URL(
-            resolvingBookmarkData: data,
-            options: [.withSecurityScope, .withoutUI],
-            relativeTo: nil,
-            bookmarkDataIsStale: &isStale
-        ), url.standardizedFileURL.path == Self.volumePath else { return }
-
-        _ = url.startAccessingSecurityScopedResource()
-        activeCardAccessURL = url
-
-        if isStale,
-           let refreshed = try? url.bookmarkData(
-               options: .withSecurityScope,
-               includingResourceValuesForKeys: nil,
-               relativeTo: nil
-           ) {
-            UserDefaults.standard.set(refreshed, forKey: "cardAccessBookmark")
-        }
+        statusTitle = "Ouvrez les Réglages Système"
+        statusDetail = "Confidentialité et sécurité › Accès complet au disque."
     }
 
     func chooseVideo() {
@@ -144,6 +103,7 @@ final class CarteController: ObservableObject {
 
     func prepareConfirmed() {
         guard let selectedCard = card, let selectedVideo = videoURL, canPrepare else { return }
+        logEvent("Préparation demandée : carte=\(selectedCard.mountPath), vidéo=\(selectedVideo.path)")
 
         operationInProgress = true
         phase = .working
@@ -225,7 +185,19 @@ final class CarteController: ObservableObject {
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
-            let result = self.inspectMountedCard()
+            let inspected = self.inspectMountedCard()
+            let result: Result<CardDetails, Error>
+            switch inspected {
+            case .success(let details):
+                do {
+                    try self.requireFullDiskAccessIfNeeded(on: details)
+                    result = .success(details)
+                } catch {
+                    result = .failure(error)
+                }
+            case .failure(let error):
+                result = .failure(error)
+            }
             DispatchQueue.main.async {
                 self.inspectionInProgress = false
                 switch result {
@@ -239,10 +211,14 @@ final class CarteController: ObservableObject {
                     self.statusTitle = "Carte CK détectée"
                     self.statusDetail = "Tout est prêt. Appuyez sur le bouton pour commencer."
                 case .failure(let error):
+                    let needsAccess = self.requiresAccessSettings(for: error)
                     self.phase = .failure
                     self.errorMessage = error.localizedDescription
-                    self.statusTitle = "Carte non utilisable"
-                    self.statusDetail = error.localizedDescription
+                    self.needsAccessHelp = needsAccess
+                    self.statusTitle = needsAccess ? "Autorisation nécessaire" : "Carte non utilisable"
+                    self.statusDetail = needsAccess
+                        ? "Activez Carte Claire dans Accès complet au disque, puis rouvrez l’app."
+                        : error.localizedDescription
                 }
             }
         }
@@ -292,6 +268,7 @@ final class CarteController: ObservableObject {
 
     private func runWorkflow(card: CardDetails, sourceVideo: URL) {
         do {
+            logEvent("Début du workflow sur \(card.wholeDisk) (\(card.fileSystem))")
             guard fileManager.fileExists(atPath: card.mountPath) else {
                 throw CardPrepError.message("La carte a été retirée avant le début de l’opération.")
             }
@@ -316,17 +293,15 @@ final class CarteController: ObservableObject {
             let trashMarker = URL(fileURLWithPath: card.mountPath)
                 .appendingPathComponent(".Trashes")
 
+            try requireFullDiskAccessIfNeeded(on: card)
+
             publish(step: .clean, title: "Carte remise à zéro", detail: "Arrêt de Spotlight et nettoyage des fichiers invisibles…", progress: nil)
-            _ = runTool(
+            let disableSpotlightResult = runTool(
                 executable: "/usr/bin/mdutil",
                 arguments: ["-i", "off", card.mountPath],
                 timeout: 12
             )
-            _ = runTool(
-                executable: "/usr/bin/mdutil",
-                arguments: ["-X", card.mountPath],
-                timeout: 12
-            )
+            logEvent("Désactivation Spotlight : status=\(disableSpotlightResult.status) \(disableSpotlightResult.output)")
             try ensureRegularFile(at: spotlightMarker, description: "la protection Spotlight")
             try removeItems(on: card, keeping: [spotlightMarker])
             let emptyItems = try volumeItems(at: card.mountPath).filter {
@@ -408,6 +383,7 @@ final class CarteController: ObservableObject {
             }
 
             DispatchQueue.main.async {
+                self.logEvent("Workflow terminé avec succès ; carte éjectée")
                 self.operationInProgress = false
                 self.card = nil
                 self.phase = .success
@@ -417,10 +393,11 @@ final class CarteController: ObservableObject {
                 self.statusDetail = "La carte ne contient que \(sourceVideo.lastPathComponent). Retirez-la et insérez la suivante."
             }
         } catch {
+            logEvent("ÉCHEC : \(diagnosticDescription(for: error))")
             DispatchQueue.main.async {
                 let needsAccess = self.requiresAccessSettings(for: error)
                 let displayedError = needsAccess
-                    ? "macOS n’a pas autorisé Carte Claire à modifier cette carte. Cliquez sur « Donner accès à CK… », choisissez CK, puis l’app réessaiera sans demander de mot de passe."
+                    ? "Autorisez Carte Claire dans « Accès complet au disque », puis quittez et rouvrez l’app. Cette permission n’est demandée qu’une fois sur ce Mac."
                     : error.localizedDescription
                 self.operationInProgress = false
                 self.phase = .failure
@@ -464,7 +441,8 @@ final class CarteController: ObservableObject {
                 do {
                     try fileManager.removeItem(at: trashMarker)
                 } catch {
-                    try deleteWithoutPassword(paths: [trashMarker])
+                    logEvent(".Trashes protégée : \(diagnosticDescription(for: error))")
+                    try repairAndDelete(paths: [trashMarker])
                 }
             }
 
@@ -479,7 +457,7 @@ final class CarteController: ObservableObject {
 
     private func removableVolumeAccessError() -> CardPrepError {
         CardPrepError.removableVolumePermission(
-            "macOS n’a pas autorisé Carte Claire à modifier cette carte. Cliquez sur « Donner accès à CK… », choisissez CK, puis l’app réessaiera sans demander de mot de passe."
+            "Autorisez Carte Claire dans « Accès complet au disque », puis quittez et rouvrez l’app."
         )
     }
 
@@ -518,13 +496,14 @@ final class CarteController: ObservableObject {
             do {
                 try fileManager.removeItem(at: item)
             } catch {
+                logEvent("Suppression normale impossible pour \(item.path) : \(diagnosticDescription(for: error))")
                 protectedItems.append(item)
             }
         }
 
         if !protectedItems.isEmpty {
             updateDetail("Nouvelle tentative de nettoyage…", progress: nil)
-            try deleteWithoutPassword(paths: protectedItems)
+            try repairAndDelete(paths: protectedItems)
         }
 
         items = try volumeItems(at: card.mountPath)
@@ -534,43 +513,49 @@ final class CarteController: ObservableObject {
         }
     }
 
-    private func deleteWithoutPassword(paths: [URL]) throws {
-        guard !paths.isEmpty else { return }
+    private func requireFullDiskAccessIfNeeded(on card: CardDetails) throws {
+        let protectedNames = [".Spotlight-V100", ".Trashes", ".fseventsd"]
+        for name in protectedNames {
+            let item = URL(fileURLWithPath: card.mountPath).appendingPathComponent(name)
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: item.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+                continue
+            }
+            do {
+                _ = try fileManager.contentsOfDirectory(at: item, includingPropertiesForKeys: nil)
+            } catch {
+                logEvent("Précontrôle d’accès refusé pour \(item.path) : \(diagnosticDescription(for: error))")
+                if requiresAccessSettings(for: error) {
+                    throw removableVolumeAccessError()
+                }
+                throw error
+            }
+        }
+    }
 
-        var diagnostics = ""
+    private func repairAndDelete(paths: [URL]) throws {
+        guard !paths.isEmpty else { return }
+        logEvent("Réparation locale demandée pour : \(paths.map(\.path).joined(separator: ", "))")
 
         for item in paths {
-            for attempt in 0..<3 {
+            _ = runTool(executable: "/bin/chflags", arguments: ["-R", "nouchg,noschg", item.path], timeout: 30)
+            _ = runTool(executable: "/bin/chmod", arguments: ["-RN", item.path], timeout: 30)
+            _ = runTool(executable: "/bin/chmod", arguments: ["-R", "u+rwX", item.path], timeout: 30)
+            _ = runTool(executable: "/usr/bin/xattr", arguments: ["-cr", item.path], timeout: 30)
+
+            for _ in 0..<3 {
                 guard fileManager.fileExists(atPath: item.path) else { break }
-
-                if attempt == 0 {
-                    _ = runTool(executable: "/bin/chflags", arguments: ["-R", "nouchg,noschg", item.path], timeout: 30)
-                    _ = runTool(executable: "/bin/chmod", arguments: ["-RN", item.path], timeout: 30)
-                    _ = runTool(executable: "/bin/chmod", arguments: ["-R", "u+rwX", item.path], timeout: 30)
-                    _ = runTool(executable: "/usr/bin/xattr", arguments: ["-cr", item.path], timeout: 30)
-                }
-
-                let result = runTool(
-                    executable: "/bin/rm",
-                    arguments: ["-rf", "--", item.path],
-                    timeout: 90
-                )
-                diagnostics += "\n" + result.output
-                if result.timedOut { break }
-                if fileManager.fileExists(atPath: item.path) {
+                do {
+                    try fileManager.removeItem(at: item)
+                } catch {
+                    logEvent("Nouvelle suppression impossible pour \(item.path) : \(diagnosticDescription(for: error))")
                     Thread.sleep(forTimeInterval: 0.7)
                 }
             }
         }
 
         let remaining = paths.filter { fileManager.fileExists(atPath: $0.path) }
-        guard remaining.isEmpty else {
-            let diagnostic = diagnostics.lowercased()
-            if diagnostic.contains("input/output error") || diagnostic.contains("i/o error") {
-                throw CardPrepError.message("La carte a renvoyé une erreur de lecture/écriture. Essayez une autre carte ou un autre lecteur.")
-            }
-            throw removableVolumeAccessError()
-        }
+        guard remaining.isEmpty else { throw removableVolumeAccessError() }
     }
 
     private func copyWithProgress(source: URL, destination: URL, totalBytes: Int64) throws -> TimeInterval {
@@ -781,6 +766,52 @@ final class CarteController: ObservableObject {
         DispatchQueue.main.async {
             self.statusDetail = detail
             self.progress = progress
+        }
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        return "v\(version) (\(build))"
+    }
+
+    private func diagnosticDescription(for error: Error) -> String {
+        let nsError = error as NSError
+        var parts = ["\(nsError.domain) \(nsError.code): \(nsError.localizedDescription)"]
+        if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+            parts.append("cause: \(underlying.domain) \(underlying.code): \(underlying.localizedDescription)")
+        }
+        return parts.joined(separator: " | ")
+    }
+
+    private func logEvent(_ message: String) {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let line = "[\(timestamp)] \(message.replacingOccurrences(of: "\n", with: " ↵ "))\n"
+        NSLog("Carte Claire: %@", message)
+
+        let url = diagnosticURL
+        diagnosticQueue.async {
+            let directory = url.deletingLastPathComponent()
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+            if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+               let size = attributes[.size] as? NSNumber,
+               size.intValue > 2_000_000 {
+                try? FileManager.default.removeItem(at: url)
+            }
+
+            if !FileManager.default.fileExists(atPath: url.path) {
+                FileManager.default.createFile(atPath: url.path, contents: nil)
+            }
+            guard let data = line.data(using: .utf8),
+                  let handle = try? FileHandle(forWritingTo: url) else { return }
+            defer { try? handle.close() }
+            do {
+                try handle.seekToEnd()
+                try handle.write(contentsOf: data)
+            } catch {
+                NSLog("Carte Claire: impossible d’écrire le diagnostic: %@", error.localizedDescription)
+            }
         }
     }
 
