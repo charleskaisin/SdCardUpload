@@ -199,7 +199,7 @@ struct ContentView: View {
                 .frame(width: 650, height: 290)
                 .rotationEffect(.degrees(trailsAreMoving ? -8 : -18))
                 .offset(x: trailsAreMoving ? 28 : -18, y: trailsAreMoving ? 72 : 34)
-                .opacity(controller.phase == .working ? 0 : 1)
+                .opacity(controller.phase == .working || controller.needsAccessHelp ? 0 : 1)
 
             Ellipse()
                 .trim(from: 0.44, to: 0.96)
@@ -210,7 +210,7 @@ struct ContentView: View {
                 .frame(width: 620, height: 270)
                 .rotationEffect(.degrees(trailsAreMoving ? 190 : 202))
                 .offset(x: trailsAreMoving ? -24 : 22, y: trailsAreMoving ? -62 : -24)
-                .opacity(controller.phase == .working ? 0 : 1)
+                .opacity(controller.phase == .working || controller.needsAccessHelp ? 0 : 1)
 
             ForEach(0..<14) { index in
                 Image(systemName: index % 4 == 0 ? "sparkle" : "circle.fill")
