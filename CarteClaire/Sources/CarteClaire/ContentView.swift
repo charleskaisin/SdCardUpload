@@ -14,7 +14,7 @@ struct ContentView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 64, style: .continuous)
                 .fill(backgroundGradient)
-                .frame(width: 576, height: 680)
+                .frame(width: 576, height: 656)
                 .overlay(
                     RoundedRectangle(cornerRadius: 64, style: .continuous)
                         .stroke(
@@ -30,28 +30,33 @@ struct ContentView: View {
 
             playfulGlow
 
-            VStack(spacing: 12) {
-                videoPill
-                missionOrbit
-                actionArea
+            if controller.phase == .working {
+                WorkingEnergyField()
+                    .frame(width: 576, height: 656)
+                    .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
             }
-            .frame(width: 510)
 
-            Button(action: { NSApplication.shared.terminate(nil) }) {
-                Image(systemName: "xmark")
+            if controller.needsAccessHelp {
+                permissionGate
+            } else {
+                VStack(spacing: 12) {
+                    videoPill
+                    missionOrbit
+                    actionArea
+                }
+                .frame(width: 510)
+                .offset(y: 19)
             }
-            .buttonStyle(QuitButtonStyle())
-            .accessibilityLabel("Quitter")
-            .help("Quitter")
-            .offset(x: 232, y: -286)
+
+            topControls
 
             if controller.phase == .success {
-                CelebrationDots()
-                    .frame(width: 576, height: 680)
+                CelebrationShow()
+                    .frame(width: 576, height: 656)
                     .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
             }
         }
-        .frame(width: 640, height: 716)
+        .frame(width: 640, height: 692)
         .background(WindowConfigurator())
         .onAppear {
             withAnimation(.linear(duration: 18).repeatForever(autoreverses: false)) {
@@ -66,6 +71,97 @@ struct ContentView: View {
             withAnimation(.easeInOut(duration: 7.5).repeatForever(autoreverses: true)) {
                 trailsAreMoving = true
             }
+        }
+    }
+
+    private var topControls: some View {
+        HStack(spacing: 9) {
+            Button(action: controller.toggleSound) {
+                Image(systemName: controller.soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
+            }
+            .buttonStyle(QuitButtonStyle())
+            .accessibilityLabel(controller.soundEnabled ? "Désactiver les sons" : "Activer les sons")
+            .help(controller.soundEnabled ? "Couper les sons" : "Activer les sons")
+
+            Button(action: { NSApplication.shared.terminate(nil) }) {
+                Image(systemName: "xmark")
+            }
+            .buttonStyle(QuitButtonStyle())
+            .accessibilityLabel("Quitter")
+            .help("Quitter")
+        }
+        .offset(x: 208, y: -278)
+    }
+
+    private var permissionGate: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.14))
+                    .frame(width: 148, height: 148)
+                Circle()
+                    .stroke(Color.orange.opacity(pulseIsGrowing ? 0.75 : 0.25), lineWidth: 4)
+                    .frame(width: pulseIsGrowing ? 148 : 122, height: pulseIsGrowing ? 148 : 122)
+                    .shadow(color: .orange.opacity(0.55), radius: 18)
+                Image(systemName: "lock.open.fill")
+                    .font(.system(size: 58, weight: .black))
+                    .foregroundColor(.orange)
+                    .scaleEffect(pulseIsGrowing ? 1.06 : 0.96)
+            }
+
+            VStack(spacing: 8) {
+                Text("Une autorisation et c’est parti !")
+                    .font(.system(size: 25, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+
+                Text("Carte Claire doit pouvoir effacer les petits fichiers invisibles créés par macOS.")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.72))
+                    .multilineTextAlignment(.center)
+                    .frame(width: 390)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                permissionStep("1", "Ouvrez les réglages avec le bouton ci-dessous")
+                permissionStep("2", "Activez Carte Claire dans la liste")
+                permissionStep("3", "Quittez puis rouvrez l’app")
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 17)
+            .frame(width: 462)
+            .background(Color.white.opacity(0.08))
+            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.14), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+
+            Button(action: controller.openFullDiskAccessSettings) {
+                HStack(spacing: 10) {
+                    Image(systemName: "gearshape.fill")
+                    Text("Ouvrir les réglages")
+                }
+            }
+            .font(.system(size: 17, weight: .black, design: .rounded))
+            .buttonStyle(FixedGlowButtonStyle(color: .orange, width: 462, height: 66))
+
+            Text("Cette étape n’est demandée qu’une fois sur ce Mac.")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundColor(electricCyan.opacity(0.88))
+        }
+        .frame(width: 510)
+        .offset(y: 16)
+    }
+
+    private func permissionStep(_ number: String, _ text: String) -> some View {
+        HStack(spacing: 12) {
+            Text(number)
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .foregroundColor(Color(red: 0.08, green: 0.09, blue: 0.18))
+                .frame(width: 25, height: 25)
+                .background(Color.orange)
+                .clipShape(Circle())
+            Text(text)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundColor(.white.opacity(0.88))
         }
     }
 
@@ -125,7 +221,7 @@ struct ContentView: View {
                     )
             }
         }
-        .frame(width: 576, height: 680)
+        .frame(width: 576, height: 656)
         .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -273,12 +369,7 @@ struct ContentView: View {
             .disabled(!controller.canPrepare)
             .scaleEffect(controller.phase == .ready && pulseIsGrowing ? 1.018 : 1)
 
-            if controller.needsAccessHelp {
-                Button(action: controller.openFullDiskAccessSettings) {
-                    Label("Autoriser Carte Claire…", systemImage: "lock.open.fill")
-                }
-                .buttonStyle(OrbitLinkButtonStyle(color: .orange))
-            } else if controller.canEject && controller.phase != .working {
+            if controller.canEject && controller.phase != .working {
                 Button("Éjecter sans préparer", action: controller.ejectCurrentCard)
                     .buttonStyle(OrbitLinkButtonStyle(color: electricCyan))
             }
@@ -439,28 +530,133 @@ private struct OrbitLinkButtonStyle: ButtonStyle {
     }
 }
 
-private struct CelebrationDots: View {
-    private let colors: [Color] = [.pink, .purple, electricCyan, .green, .orange, .yellow]
-    @State private var isCelebrating = false
+private struct WorkingEnergyField: View {
+    private let colors: [Color] = [.pink, .purple, electricCyan, .orange, .yellow]
+    @State private var particlesAreFlying = false
+    @State private var ringsAreExpanding = false
+    @State private var vortexIsTurning = false
 
     var body: some View {
         GeometryReader { geometry in
-            ForEach(0..<24) { index in
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(colors[index % colors.count].opacity(0.62))
-                    .frame(width: CGFloat(5 + index % 4), height: CGFloat(8 + index % 5))
-                    .rotationEffect(.degrees(isCelebrating ? Double(index * 95) : Double(index * 17)))
-                    .position(
-                        x: CGFloat((index * 83) % max(1, Int(geometry.size.width))),
-                        y: CGFloat((index * 137) % max(1, Int(geometry.size.height))) + (isCelebrating ? 42 : -42)
-                    )
+            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2 + 22)
+
+            ZStack {
+                ForEach(0..<4) { index in
+                    Circle()
+                        .stroke(colors[index].opacity(ringsAreExpanding ? 0.02 : 0.42), lineWidth: CGFloat(2 + index))
+                        .frame(width: CGFloat(130 + index * 34), height: CGFloat(130 + index * 34))
+                        .scaleEffect(ringsAreExpanding ? 2.15 : 0.62)
+                        .position(center)
+                        .animation(
+                            .easeOut(duration: 1.35 + Double(index) * 0.16)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index) * 0.20),
+                            value: ringsAreExpanding
+                        )
+                }
+
+                ForEach(0..<56) { index in
+                    let angle = Double(index) * 137.5 * .pi / 180
+                    let distance = CGFloat(105 + (index * 29) % 255)
+                    let startDistance = CGFloat(25 + (index * 7) % 42)
+                    let size = CGFloat(3 + index % 6)
+
+                    Capsule()
+                        .fill(colors[index % colors.count])
+                        .frame(width: index % 4 == 0 ? size * 3.2 : size, height: size)
+                        .shadow(color: colors[index % colors.count].opacity(0.8), radius: 5)
+                        .rotationEffect(.radians(angle))
+                        .position(
+                            x: center.x + cos(angle) * (particlesAreFlying ? distance : startDistance),
+                            y: center.y + sin(angle) * (particlesAreFlying ? distance : startDistance)
+                        )
+                        .opacity(particlesAreFlying ? 0.02 : 0.92)
+                        .animation(
+                            .easeOut(duration: 0.75 + Double(index % 9) * 0.09)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index % 13) * 0.055),
+                            value: particlesAreFlying
+                        )
+                }
+
+                ForEach(0..<3) { index in
+                    Ellipse()
+                        .trim(from: 0.05, to: 0.38)
+                        .stroke(
+                            colors[index].opacity(0.55),
+                            style: StrokeStyle(lineWidth: CGFloat(3 + index), lineCap: .round)
+                        )
+                        .frame(width: CGFloat(390 + index * 75), height: CGFloat(170 + index * 28))
+                        .rotationEffect(.degrees(vortexIsTurning ? Double(360 + index * 55) : Double(index * 55)))
+                        .position(center)
+                }
             }
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
-                isCelebrating = true
+            withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) {
+                vortexIsTurning = true
             }
+            particlesAreFlying = true
+            ringsAreExpanding = true
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct CelebrationShow: View {
+    private let colors: [Color] = [.pink, .purple, electricCyan, .green, .orange, .yellow]
+    @State private var isCelebrating = false
+    @State private var fireworkIsBlooming = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+
+            ZStack {
+                ForEach(0..<3) { index in
+                    Circle()
+                        .stroke(colors[(index + 2) % colors.count].opacity(fireworkIsBlooming ? 0.01 : 0.72), lineWidth: CGFloat(4 - index))
+                        .frame(width: CGFloat(80 + index * 26), height: CGFloat(80 + index * 26))
+                        .scaleEffect(fireworkIsBlooming ? 3.6 : 0.35)
+                        .position(center)
+                        .animation(
+                            .easeOut(duration: 1.2 + Double(index) * 0.18)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index) * 0.16),
+                            value: fireworkIsBlooming
+                        )
+                }
+
+                ForEach(0..<72) { index in
+                    let angle = Double(index) * 47.0 * .pi / 180
+                    let radius = CGFloat(90 + (index * 37) % 305)
+                    let width = CGFloat(4 + index % 5)
+
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(colors[index % colors.count])
+                        .frame(width: index % 3 == 0 ? width * 2.5 : width, height: CGFloat(7 + index % 8))
+                        .shadow(color: colors[index % colors.count].opacity(0.8), radius: 4)
+                        .rotationEffect(.degrees(isCelebrating ? Double(index * 125) : Double(index * 17)))
+                        .position(
+                            x: center.x + cos(angle) * (isCelebrating ? radius : 35),
+                            y: center.y + sin(angle) * (isCelebrating ? radius : 35)
+                        )
+                        .opacity(isCelebrating ? 0.02 : 0.95)
+                        .animation(
+                            .easeOut(duration: 0.9 + Double(index % 8) * 0.12)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index % 17) * 0.045),
+                            value: isCelebrating
+                        )
+                }
+            }
+        }
+        .onAppear {
+            isCelebrating = true
+            fireworkIsBlooming = true
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

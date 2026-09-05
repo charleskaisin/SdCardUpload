@@ -4,13 +4,13 @@ Carte Claire prépare les cartes SD utilisées par le projecteur : elle vide une
 carte nommée `CK`, copie une seule vidéo, vérifie la copie octet par octet,
 supprime les fichiers invisibles de macOS et éjecte la carte en toute sécurité.
 
-![Aperçu de Carte Claire](docs/Apercu-Carte-Claire-v4.3.jpg)
+![Aperçu de Carte Claire](docs/Apercu-Carte-Claire-v4.6.jpg)
 
 <img src="docs/Icone-Carte-Claire-v4.2.png" alt="Icône de Carte Claire" width="180">
 
 ## Versions prêtes à utiliser
 
-- [Carte Claire 4.5 — application macOS](dist/Carte-Claire-v4.5.zip)
+- [Carte Claire 4.6 — application macOS](dist/Carte-Claire-v4.6.zip)
 - [Outil ligne de commande — VERSION 8](dist/Outil-carte-SD-v8.0.zip)
 
 L’application est recommandée pour l’équipe. Sa fenêtre arrondie reprend les
@@ -50,8 +50,8 @@ usage, macOS peut demander l’autorisation d’utiliser les volumes amovibles :
 cliquez sur **Autoriser**.
 
 Les dossiers Spotlight présents sur une carte sont protégés par macOS, même pour
-un processus administrateur. Carte Claire 4.5 détecte cette situation avant tout
-effacement et affiche **Autoriser Carte Claire…**. Ce bouton ouvre directement
+un processus administrateur. Carte Claire 4.6 détecte cette situation avant tout
+effacement et remplace toute l’interface par un guide d’autorisation. Son bouton ouvre directement
 **Réglages Système > Confidentialité et sécurité > Accès complet au disque** :
 activez **Carte Claire**, quittez l’app puis rouvrez-la. Cette opération n’est à
 faire qu’une fois par Mac pour cette version de l’app.

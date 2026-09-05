@@ -1,9 +1,9 @@
 CARTE CLAIRE — MODE D’EMPLOI
 
-La VERSION 4.5 adopte une fenêtre plus compacte, des animations inspirées de sa
-nouvelle icône et une interface volontairement simple. Faites glisser le fond de
-la fenêtre pour déplacer l’application. Le bouton × placé en haut à droite
-permet de la quitter.
+La VERSION 4.6 adopte une fenêtre plus compacte, une animation de copie beaucoup
+plus énergique, des sons de réussite et d’erreur, et une interface volontairement
+simple. Faites glisser le fond de la fenêtre pour déplacer l’application. Les
+boutons placés en haut à droite permettent de couper le son ou de quitter.
 
 1. Ouvrez « Carte Claire » et laissez l’application ouverte.
 2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.
@@ -20,7 +20,7 @@ IMPORTANT
 - Ne retirez pas la carte pendant une opération.
 - Au premier accès à une carte, cliquez sur « Autoriser » lorsque macOS demande l’accès aux volumes amovibles.
 - Placez Carte Claire dans le dossier Applications avant de l’utiliser.
-- Au premier lancement, si « Autorisation nécessaire » apparaît, cliquez sur « Autoriser Carte Claire… ».
+- Au premier lancement, si l’écran d’autorisation apparaît, cliquez sur « Ouvrir les réglages ».
 - Dans « Accès complet au disque », activez Carte Claire, puis quittez et rouvrez l’app. Cette autorisation n’est à donner qu’une fois sur chaque Mac.
 - Carte Claire vérifie cette autorisation avant d’effacer le moindre fichier et ne demande plus de mot de passe administrateur pendant la préparation.
 - En cas d’échec, un diagnostic précis est conservé dans « Bibliothèque > Logs > Carte Claire ».

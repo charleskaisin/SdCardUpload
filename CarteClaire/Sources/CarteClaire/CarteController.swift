@@ -16,6 +16,7 @@ final class CarteController: ObservableObject {
     @Published var statusDetail = "L’app attend une carte nommée CK."
     @Published var errorMessage = ""
     @Published var needsAccessHelp = false
+    @Published var soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
 
     private let fileManager = FileManager.default
     private var detectionTimer: Timer?
@@ -62,6 +63,14 @@ final class CarteController: ObservableObject {
 
     func askToPrepare() {
         prepareConfirmed()
+    }
+
+    func toggleSound() {
+        soundEnabled.toggle()
+        UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled")
+        if soundEnabled {
+            NSSound(named: NSSound.Name("Pop"))?.play()
+        }
     }
 
     func openFullDiskAccessSettings() {
@@ -146,6 +155,7 @@ final class CarteController: ObservableObject {
                     self.errorMessage = "Le Mac n’a pas réussi à éjecter la carte. Fermez les fenêtres du Finder et réessayez."
                     self.statusTitle = "Éjection impossible"
                     self.statusDetail = self.errorMessage
+                    self.playOutcomeSound(success: false)
                 }
             }
         }
@@ -323,7 +333,7 @@ final class CarteController: ObservableObject {
                 throw CardPrepError.message("La carte est trop petite pour contenir cette vidéo.")
             }
 
-            publish(step: .copy, title: "Copie unique de la vidéo", detail: "0 %", progress: 0)
+            publish(step: .copy, title: "Copie unique de la vidéo", detail: "Préparation de la copie…", progress: 0)
             let copyDuration = try copyWithProgress(
                 source: sourceVideo,
                 destination: destination,
@@ -391,6 +401,7 @@ final class CarteController: ObservableObject {
                 self.progress = 1
                 self.statusTitle = "Mission accomplie !"
                 self.statusDetail = "La carte ne contient que \(sourceVideo.lastPathComponent). Retirez-la et insérez la suivante."
+                self.playOutcomeSound(success: true)
             }
         } catch {
             logEvent("ÉCHEC : \(diagnosticDescription(for: error))")
@@ -406,8 +417,21 @@ final class CarteController: ObservableObject {
                 self.needsAccessHelp = needsAccess
                 self.statusTitle = "Préparation interrompue"
                 self.statusDetail = displayedError
+                self.playOutcomeSound(success: false)
             }
         }
+    }
+
+    private func playOutcomeSound(success: Bool) {
+        guard soundEnabled else { return }
+        let names = success ? ["Glass", "Hero"] : ["Basso", "Funk"]
+        for name in names {
+            if let sound = NSSound(named: NSSound.Name(name)) {
+                sound.play()
+                return
+            }
+        }
+        NSSound.beep()
     }
 
     private func volumeItems(at mountPath: String) throws -> [URL] {
@@ -590,7 +614,7 @@ final class CarteController: ObservableObject {
             let fraction = min(1, Double(currentSize) / Double(totalBytes))
             let elapsed = max(1, Date().timeIntervalSince(started))
             let speed = Double(currentSize) / elapsed
-            let detail = "\(Int(fraction * 100)) %  •  \(formatBytes(currentSize)) / \(formatBytes(totalBytes))  •  \(formatSpeed(speed))"
+            let detail = "\(formatBytes(currentSize)) / \(formatBytes(totalBytes))  •  \(formatSpeed(speed))"
             updateDetail(detail, progress: fraction)
 
             if Date().timeIntervalSince(lastProgress) >= 90 {
