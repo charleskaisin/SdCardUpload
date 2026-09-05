@@ -1,8 +1,9 @@
 CARTE CLAIRE — MODE D’EMPLOI
 
-La VERSION 4.1 adopte les proportions verticales et la silhouette arrondie d’une
-carte SD. Faites glisser le fond de la carte pour déplacer l’application. Le
-bouton × placé en haut à droite permet de la quitter.
+La VERSION 4.2 adopte une fenêtre très arrondie, des animations inspirées de sa
+nouvelle icône et une interface volontairement simple. Faites glisser le fond de
+la fenêtre pour déplacer l’application. Le bouton × placé en haut à droite
+permet de la quitter.
 
 1. Ouvrez « Carte Claire » et laissez l’application ouverte.
 2. Vérifiez la vidéo affichée en haut de la fenêtre. Utilisez « Changer… » si nécessaire.

@@ -8,14 +8,15 @@ struct ContentView: View {
     @State private var orbitIsTurning = false
     @State private var pulseIsGrowing = false
     @State private var ambientIsFloating = false
+    @State private var trailsAreMoving = false
 
     var body: some View {
         ZStack {
-            SDCardWindowShape()
+            RoundedRectangle(cornerRadius: 64, style: .continuous)
                 .fill(backgroundGradient)
                 .frame(width: 576, height: 744)
                 .overlay(
-                    SDCardWindowShape()
+                    RoundedRectangle(cornerRadius: 64, style: .continuous)
                         .stroke(
                             AngularGradient(
                                 gradient: Gradient(colors: [electricCyan, .purple, .pink, .orange, electricCyan]),
@@ -30,7 +31,6 @@ struct ContentView: View {
             playfulGlow
 
             VStack(spacing: 12) {
-                header
                 videoPill
                 missionOrbit
                 actionArea
@@ -47,8 +47,8 @@ struct ContentView: View {
 
             if controller.phase == .success {
                 CelebrationDots()
-                    .clipShape(SDCardWindowShape())
                     .frame(width: 576, height: 744)
+                    .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
             }
         }
         .frame(width: 640, height: 780)
@@ -71,6 +71,9 @@ struct ContentView: View {
             withAnimation(.easeInOut(duration: 4.2).repeatForever(autoreverses: true)) {
                 ambientIsFloating = true
             }
+            withAnimation(.easeInOut(duration: 7.5).repeatForever(autoreverses: true)) {
+                trailsAreMoving = true
+            }
         }
     }
 
@@ -89,52 +92,51 @@ struct ContentView: View {
 
     private var playfulGlow: some View {
         ZStack {
-            Circle()
-                .fill(Color.purple.opacity(0.18))
-                .frame(width: 250, height: 250)
-                .blur(radius: 38)
-                .offset(x: ambientIsFloating ? 145 : 105, y: ambientIsFloating ? -180 : -130)
+            RoundedRectangle(cornerRadius: 64, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.purple.opacity(0.16), Color.clear, electricCyan.opacity(0.10)],
+                        startPoint: ambientIsFloating ? .topTrailing : .topLeading,
+                        endPoint: ambientIsFloating ? .bottomLeading : .bottomTrailing
+                    )
+                )
+                .opacity(ambientIsFloating ? 1 : 0.62)
 
-            Circle()
-                .fill(electricCyan.opacity(0.12))
-                .frame(width: 220, height: 220)
-                .blur(radius: 42)
-                .offset(x: ambientIsFloating ? -150 : -105, y: ambientIsFloating ? 235 : 190)
+            Ellipse()
+                .trim(from: 0.04, to: 0.68)
+                .stroke(
+                    LinearGradient(colors: [electricCyan.opacity(0.05), electricCyan.opacity(0.74), Color.blue.opacity(0.05)], startPoint: .leading, endPoint: .trailing),
+                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                )
+                .frame(width: 650, height: 290)
+                .rotationEffect(.degrees(trailsAreMoving ? -8 : -18))
+                .offset(x: trailsAreMoving ? 28 : -18, y: trailsAreMoving ? 72 : 34)
 
-            ForEach(0..<9) { index in
-                Circle()
-                    .fill([electricCyan, Color.pink, Color.purple][index % 3].opacity(0.30))
-                    .frame(width: CGFloat(3 + index % 3), height: CGFloat(3 + index % 3))
+            Ellipse()
+                .trim(from: 0.44, to: 0.96)
+                .stroke(
+                    LinearGradient(colors: [Color.pink.opacity(0.04), Color.pink.opacity(0.78), Color.purple.opacity(0.08)], startPoint: .leading, endPoint: .trailing),
+                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                )
+                .frame(width: 620, height: 270)
+                .rotationEffect(.degrees(trailsAreMoving ? 190 : 202))
+                .offset(x: trailsAreMoving ? -24 : 22, y: trailsAreMoving ? -62 : -24)
+
+            ForEach(0..<14) { index in
+                Image(systemName: index % 4 == 0 ? "sparkle" : "circle.fill")
+                    .font(.system(size: CGFloat(index % 4 == 0 ? 10 : 3 + index % 3), weight: .bold))
+                    .foregroundColor([electricCyan, Color.pink, Color.purple][index % 3].opacity(0.48))
+                    .scaleEffect(ambientIsFloating ? 1.18 : 0.72)
                     .offset(
-                        x: CGFloat((index * 71) % 440) - 220,
-                        y: CGFloat((index * 109) % 580) - 290 + (ambientIsFloating ? -8 : 8)
+                        x: CGFloat((index * 97) % 500) - 250,
+                        y: CGFloat((index * 131) % 650) - 325 + (ambientIsFloating ? -10 : 10)
                     )
             }
         }
-        .clipShape(SDCardWindowShape())
         .frame(width: 576, height: 744)
+        .clipShape(RoundedRectangle(cornerRadius: 64, style: .continuous))
         .allowsHitTesting(false)
-    }
-
-    private var header: some View {
-        HStack(spacing: 11) {
-            ZStack {
-                Circle()
-                    .fill(LinearGradient(colors: [electricCyan, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 44, height: 44)
-                    .shadow(color: .pink.opacity(0.28), radius: 9)
-                Image(systemName: "sdcard.fill")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
-            }
-
-            Text("Carte Claire")
-                .font(.system(size: 27, weight: .black, design: .rounded))
-                .foregroundColor(.white)
-
-            Spacer()
-        }
-        .frame(width: 482, height: 48)
+        .accessibilityHidden(true)
     }
 
     private var videoPill: some View {
@@ -160,7 +162,7 @@ struct ContentView: View {
                 .disabled(controller.phase == .working)
         }
         .padding(.horizontal, 15)
-        .frame(width: 482, height: 56)
+        .frame(width: 482, height: 64)
         .background(Color.white.opacity(0.09))
         .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
         .clipShape(Capsule())
@@ -195,7 +197,7 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(width: 410, height: 382)
+        .frame(width: 410, height: 400)
     }
 
     private var centralStatus: some View {
@@ -225,10 +227,10 @@ struct ContentView: View {
 
             VStack(spacing: 6) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 23, style: .continuous)
                         .fill(Color(red: 0.06, green: 0.08, blue: 0.18))
-                        .frame(width: 68, height: 82)
-                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(phaseColor, lineWidth: 3))
+                        .frame(width: 82, height: 104)
+                        .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous).stroke(phaseColor, lineWidth: 4))
                         .shadow(color: phaseColor.opacity(0.35), radius: 12)
 
                     Image(systemName: cardSymbol)
@@ -276,10 +278,9 @@ struct ContentView: View {
                     Image(systemName: controller.phase == .success ? "sparkles" : "play.fill")
                     Text(primaryButtonTitle)
                 }
-                .frame(width: 374)
             }
             .font(.system(size: 17, weight: .black, design: .rounded))
-            .buttonStyle(GlowCapsuleButtonStyle(color: .pink, compact: false))
+            .buttonStyle(FixedGlowButtonStyle(color: .pink, width: 482, height: 64))
             .disabled(!controller.canPrepare)
             .scaleEffect(controller.phase == .ready && pulseIsGrowing ? 1.018 : 1)
 
@@ -293,7 +294,7 @@ struct ContentView: View {
                     .buttonStyle(OrbitLinkButtonStyle(color: electricCyan))
             }
         }
-        .frame(height: 62)
+        .frame(height: 86)
     }
 
     private var primaryButtonTitle: String {
@@ -370,43 +371,6 @@ private struct OrbitStep: View {
     }
 }
 
-private struct SDCardWindowShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let radius: CGFloat = 46
-        let cut: CGFloat = min(124, rect.width * 0.22)
-        var path = Path()
-
-        path.move(to: CGPoint(x: rect.minX + cut + 10, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.maxX, y: rect.minY + radius),
-            control: CGPoint(x: rect.maxX, y: rect.minY)
-        )
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - radius))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.maxX - radius, y: rect.maxY),
-            control: CGPoint(x: rect.maxX, y: rect.maxY)
-        )
-        path.addLine(to: CGPoint(x: rect.minX + radius, y: rect.maxY))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.minX, y: rect.maxY - radius),
-            control: CGPoint(x: rect.minX, y: rect.maxY)
-        )
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + cut + 10))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.minX + 6, y: rect.minY + cut - 4),
-            control: CGPoint(x: rect.minX, y: rect.minY + cut + 2)
-        )
-        path.addLine(to: CGPoint(x: rect.minX + cut - 4, y: rect.minY + 6))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.minX + cut + 10, y: rect.minY),
-            control: CGPoint(x: rect.minX + cut + 2, y: rect.minY)
-        )
-        path.closeSubpath()
-        return path
-    }
-}
-
 private struct QuitButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -417,6 +381,33 @@ private struct QuitButtonStyle: ButtonStyle {
             .overlay(Circle().stroke(Color.white.opacity(0.16), lineWidth: 1))
             .clipShape(Circle())
             .scaleEffect(configuration.isPressed ? 0.9 : 1)
+    }
+}
+
+private struct FixedGlowButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    let color: Color
+    let width: CGFloat
+    let height: CGFloat
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(.white)
+            .frame(width: width, height: height)
+            .background(
+                LinearGradient(
+                    colors: isEnabled
+                        ? [color, Color.purple, electricCyan.opacity(0.86)]
+                        : [Color.gray.opacity(0.54), Color.gray.opacity(0.34)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .overlay(Capsule().stroke(Color.white.opacity(isEnabled ? 0.20 : 0.10), lineWidth: 1))
+            .clipShape(Capsule())
+            .shadow(color: isEnabled ? color.opacity(configuration.isPressed ? 0.25 : 0.48) : .clear, radius: 12)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.86 : (isEnabled ? 1 : 0.64))
     }
 }
 
